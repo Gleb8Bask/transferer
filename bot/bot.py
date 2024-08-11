@@ -4,6 +4,16 @@ import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 import message_texts
+from dotenv import load_dotenv
+
+import get_summarize
+import asyncio
+
+def configure():
+    load_dotenv()
+
+
+configure()
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -15,6 +25,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_BOT_TOKEN:
     exit("specify TELEGRAM_BOT_TOKEN env variable")
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     effective_chat = update.effective_chat
     if not effective_chat:
@@ -24,14 +35,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=effective_chat.id,
         text=message_texts.GREETINGS)
 
+
 async def summarize(update: Update, context: ContextTypes.DEFAULT_TYPE):
     effective_chat = update.effective_chat
     if not effective_chat:
-        logger.warning("effective_chat is None")
+        logger.warning("effective_chat is None in /summarize")
         return
+    sums = await get_summarize.get_summarize()
+    response = ",".join((str(sums.message) for sums in sums))
     await context.bot.send_message(
         chat_id=effective_chat.id,
-        text=message_texts.SUMMARIZE)
+        text=response)
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
